@@ -6,80 +6,106 @@
 
 <style>
 body{
-    margin:0;
-    background:#000;
-    font-family:Arial;
-    overflow:hidden;
-    color:#fff;
+margin:0;
+background:#000;
+font-family:Arial;
+overflow:hidden;
+color:#fff;
 }
 
 #startScreen{
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:#000;
-    display:flex;
-    justify-content:center;
-    align-items:center;
-    flex-direction:column;
-    z-index:10;
+position:fixed;
+width:100%;
+height:100%;
+background:#000;
+display:flex;
+justify-content:center;
+align-items:center;
+flex-direction:column;
+z-index:10;
 }
 
 #startBtn{
-    padding:15px 40px;
-    font-size:28px;
-    border:none;
-    border-radius:10px;
-    background:#00ffaa;
-    cursor:pointer;
+padding:15px 40px;
+font-size:28px;
+border:none;
+border-radius:10px;
+background:#00ffaa;
+cursor:pointer;
 }
 
 #intro{
-    position:fixed;
-    width:100%;
-    height:100%;
-    background:#000;
-    display:none;
-    justify-content:center;
-    align-items:center;
-    font-size:80px;
-    color:#00ffaa;
-    z-index:9;
+position:fixed;
+width:100%;
+height:100%;
+background:#000;
+display:none;
+justify-content:center;
+align-items:center;
+font-size:80px;
+color:#00ffaa;
+z-index:9;
 }
 
 #msg{
-    position:fixed;
-    top:20px;
-    width:100%;
-    text-align:center;
-    font-size:22px;
+position:fixed;
+top:20px;
+width:100%;
+text-align:center;
+font-size:22px;
 }
 
-#task{
-    position:fixed;
-    bottom:20px;
-    width:100%;
-    text-align:center;
-    font-size:24px;
-    color:#00ffaa;
-    padding:10px;
+/* ⭐ POPUP */
+#popup{
+position:fixed;
+left:50%;
+top:50%;
+transform:translate(-50%,-50%) scale(0);
+background:#111;
+padding:30px;
+border-radius:20px;
+width:80%;
+max-width:500px;
+text-align:center;
+box-shadow:0 0 40px #00ffaa;
+transition:0.3s;
+z-index:8;
+}
+
+#popup.show{
+transform:translate(-50%,-50%) scale(1);
+}
+
+#bigQuestion{
+font-size:26px;
+color:#00ffaa;
+margin-bottom:20px;
+}
+
+#restartBtn{
+padding:12px 30px;
+font-size:20px;
+border:none;
+border-radius:10px;
+background:#00ffaa;
+cursor:pointer;
 }
 
 #area{
-    width:100vw;
-    height:100vh;
-    position:relative;
+width:100vw;
+height:100vh;
+position:relative;
 }
 
 .finger{
-    position:absolute;
-    width:120px;
-    height:120px;
-    border-radius:50%;
-    border:4px solid;
-    transform:translate(-50%,-50%);
-    box-shadow:0 0 25px currentColor;
-    transition:0.3s;
+position:absolute;
+width:120px;
+height:120px;
+border-radius:50%;
+border:4px solid;
+transform:translate(-50%,-50%);
+box-shadow:0 0 25px currentColor;
+transition:0.3s;
 }
 </style>
 </head>
@@ -87,21 +113,22 @@ body{
 <body>
 
 <div id="startScreen">
-    <h1 style="color:#00ffaa">LETS GO</h1>
-    <button id="startBtn">START</button>
+<h1 style="color:#00ffaa">LETS GO</h1>
+<button id="startBtn">START</button>
 </div>
 
 <div id="intro">3</div>
-
 <div id="msg">Place fingers on screen</div>
-<div id="task"></div>
+
+<div id="popup">
+<div id="bigQuestion"></div>
+<button id="restartBtn">NEXT ROUND</button>
+</div>
+
 <div id="area"></div>
 
-<audio id="tickSound"
-src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
-
-<audio id="winSound"
-src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
+<audio id="tickSound" src="https://actions.google.com/sounds/v1/cartoon/wood_plank_flicks.ogg"></audio>
+<audio id="winSound" src="https://actions.google.com/sounds/v1/cartoon/clang_and_wobble.ogg"></audio>
 
 <script>
 
@@ -111,14 +138,18 @@ const intro=document.getElementById("intro");
 const tickSound=document.getElementById("tickSound");
 const winSound=document.getElementById("winSound");
 
+const popup=document.getElementById("popup");
+const bigQuestion=document.getElementById("bigQuestion");
+const restartBtn=document.getElementById("restartBtn");
+
 const area=document.getElementById("area");
 const msg=document.getElementById("msg");
-const task=document.getElementById("task");
 
 let fingers={};
 let timer=null;
+let selecting=false;
 
-/* 🤣 100+ REAL TAMIL FUNNY TASKS */
+/* 🤣 FULL 100+ TAMIL QUESTIONS */
 let questions=[
 
 "Un pakkathula irukkura person-kku propose pannu 😜",
@@ -156,11 +187,10 @@ let questions=[
 
 "Heroine pose pannu 💃",
 "Group kitta wink pannu 😉",
-"Funny laugh pannu 😂",
+"Funny laugh podu 😂",
 "Movie scene recreate pannu 🎬",
 "Dance step 5 sec 💥",
 "Closest friend ah clap panna sollu 👏",
-"Un pakkathula irukkura person ah stare pannu 😳",
 "Fake shy face podu 🤭",
 "Cool pose pannu 😎",
 "Drama queen mathiri act pannu 👑",
@@ -173,85 +203,67 @@ let questions=[
 "Un group ah army mathiri command pannu 🪖",
 "Superstar intro sollu 🌟",
 "Love song line sollu 🎵",
-"Un pakkathula irukkura person ah surprise pannu 😲",
 "Group leader ah copy pannu 😆",
 
 "Over acting pannu 🤣",
-"Random person ah villain mathiri paathu pesu 😈",
 "Hero laugh podu 😂",
-"Fake shy dialogue sollu 🥰",
 "Mass entry mathiri nadandu va 😎",
 "Model pose podu 📸",
-"Un friend ah bestie nu sollu 🤗",
 "Random player ah point pannu 👉",
-"Baby cry sound podu 😭",
 "Drama scene create pannu 🎭",
 
-"Group kitta slow clap kudu 👏",
 "Funny running style kaatu 🏃",
 "Love proposal pose podu ❤️",
 "Teacher attendance eduthu act pannu 📚",
-"Un pakkathula irukkura friend ah mimic pannu 😆",
 "Hero vs villain fight act pannu ⚔️",
 "Fake shock reaction 😲",
-"Emoji face podu 😜",
 "Funny voice la pesu 😂",
-"Silent mode la nadandu va 🤫",
 
 "Un friend ah king/queen nu sollu 👑",
 "Random player ah dance panna challenge pannu 💃",
-"Closest player ah superstar mathiri introduce pannu 🌟",
 "Funny salute podu 🫡",
-"Hero slow motion look 😎",
 "Fake crying scene 🎬",
-"Group ah laugh panna try pannu 🤣",
 "Love dialogue mass ah sollu ❤️",
-"Drama reaction podu 🎭",
-"Cool sunglasses pose imagine pannu 😎",
 
 "Funny wink 😉",
-"Random friend ah hero mathiri koopidu 🎬",
 "Left side person ah clap panna sollu 👏",
 "Right side person ah high five kudu 🙌",
-"Group la cutest smile select pannu 😊",
-"Over shy face podu 🥰",
 "Fake anger kaatu 😡",
 "Superstar intro walk 🚶‍♂️",
-"Love failure pose 😭",
 "Funny villain laugh 😈"
 
 ];
 
 /* START BUTTON */
 startBtn.onclick=()=>{
-    startScreen.style.display="none";
-    intro.style.display="flex";
-    startCountdown();
+startScreen.style.display="none";
+intro.style.display="flex";
+startCountdown();
 };
 
 /* COUNTDOWN */
 function startCountdown(){
 
-    let count=3;
+let count=3;
 
-    let t=setInterval(()=>{
+let t=setInterval(()=>{
 
-        if(count>0){
-            intro.innerText=count;
-            tickSound.currentTime=0;
-            tickSound.play();
-        }
-        else if(count===0){
-            intro.innerText="LETS GO!";
-        }
-        else{
-            clearInterval(t);
-            intro.style.display="none";
-        }
+if(count>0){
+intro.innerText=count;
+tickSound.currentTime=0;
+tickSound.play();
+}
+else if(count===0){
+intro.innerText="LETS GO!";
+}
+else{
+clearInterval(t);
+intro.style.display="none";
+}
 
-        count--;
+count--;
 
-    },1000);
+},1000);
 }
 
 /* COLORS */
@@ -265,69 +277,87 @@ let colorIndex=0;
 
 /* TOUCH START */
 area.addEventListener("touchstart",e=>{
-    e.preventDefault();
+e.preventDefault();
 
-    for(let touch of e.changedTouches){
+for(let touch of e.changedTouches){
 
-        let el=document.createElement("div");
-        el.className="finger";
+let el=document.createElement("div");
+el.className="finger";
 
-        let color=colors[colorIndex % colors.length];
-        colorIndex++;
+let color=colors[colorIndex % colors.length];
+colorIndex++;
 
-        el.style.borderColor=color;
-        el.style.boxShadow="0 0 25px "+color;
+el.style.borderColor=color;
+el.style.boxShadow="0 0 25px "+color;
 
-        el.style.left=touch.clientX+"px";
-        el.style.top=touch.clientY+"px";
+el.style.left=touch.clientX+"px";
+el.style.top=touch.clientY+"px";
 
-        area.appendChild(el);
-        fingers[touch.identifier]=el;
-    }
+area.appendChild(el);
+fingers[touch.identifier]=el;
+}
 
-    msg.innerText="Choosing player...";
-    clearTimeout(timer);
-    timer=setTimeout(selectFinger,3000);
+if(!selecting){
+selecting=true;
+msg.innerText="Choosing player...";
+timer=setTimeout(selectFinger,3000);
+}
 });
 
 /* MOVE */
 area.addEventListener("touchmove",e=>{
-    e.preventDefault();
+e.preventDefault();
 
-    for(let touch of e.changedTouches){
-        if(fingers[touch.identifier]){
-            fingers[touch.identifier].style.left=touch.clientX+"px";
-            fingers[touch.identifier].style.top=touch.clientY+"px";
-        }
-    }
+for(let touch of e.changedTouches){
+if(fingers[touch.identifier]){
+fingers[touch.identifier].style.left=touch.clientX+"px";
+fingers[touch.identifier].style.top=touch.clientY+"px";
+}
+}
 });
 
-/* SELECT RANDOM */
+/* RANDOM SELECT */
 function selectFinger(){
 
-    let keys=Object.keys(fingers);
-    if(keys.length===0)return;
+let keys=Object.keys(fingers);
+if(keys.length===0)return;
 
-    let winner=keys[Math.floor(Math.random()*keys.length)];
+let winner=keys[Math.floor(Math.random()*keys.length)];
 
-    for(let k in fingers){
-        fingers[k].style.opacity="0.2";
-        fingers[k].style.transform="translate(-50%,-50%) scale(0.7)";
-    }
-
-    let winEl=fingers[winner];
-    winEl.style.opacity="1";
-    winEl.style.transform="translate(-50%,-50%) scale(1.6)";
-    winEl.style.boxShadow="0 0 60px white";
-
-    msg.innerText="⭐ Player Selected!";
-
-    winSound.currentTime=0;
-    winSound.play();
-
-    let q=questions[Math.floor(Math.random()*questions.length)];
-    task.innerText=q;
+for(let k in fingers){
+fingers[k].style.opacity="0.2";
+fingers[k].style.transform="translate(-50%,-50%) scale(0.7)";
 }
+
+let winEl=fingers[winner];
+winEl.style.opacity="1";
+winEl.style.transform="translate(-50%,-50%) scale(1.6)";
+winEl.style.boxShadow="0 0 60px white";
+
+msg.innerText="⭐ Player Selected!";
+
+winSound.currentTime=0;
+winSound.play();
+
+let q=questions[Math.floor(Math.random()*questions.length)];
+bigQuestion.innerText=q;
+
+popup.classList.add("show");
+}
+
+/* NEXT ROUND */
+restartBtn.onclick=()=>{
+
+popup.classList.remove("show");
+
+for(let k in fingers){
+fingers[k].remove();
+}
+
+fingers={};
+selecting=false;
+msg.innerText="Place fingers on screen";
+};
 
 </script>
 </body>
